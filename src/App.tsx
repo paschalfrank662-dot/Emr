@@ -33,15 +33,13 @@ function Registration() {
       const controller = new AbortController()
       const timeout = window.setTimeout(() => controller.abort(), 30000)
       let registration: Response
+      const payload = JSON.stringify({ ...form, email, hospitalCode })
       try {
-        registration = await fetch(`${window.location.origin}/api/register-hospital`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-          credentials: 'same-origin',
-          cache: 'no-store',
-          signal: controller.signal,
-          body: JSON.stringify({ ...form, email, hospitalCode }),
-        })
+        const request = { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, credentials: 'same-origin' as RequestCredentials, cache: 'no-store' as RequestCache, signal: controller.signal, body: payload }
+        registration = await fetch('/api/register-hospital', request)
+        // Some Vercel projects retain a stale rewrite cache; retry the function
+        // path directly before surfacing a network failure to the user.
+        if (registration.status === 404 || registration.status === 405) registration = await fetch('/api/register-hospital.ts', request)
       } finally {
         window.clearTimeout(timeout)
       }

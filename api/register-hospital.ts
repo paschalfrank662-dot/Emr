@@ -27,6 +27,7 @@ function text(value: unknown) {
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
   response.setHeader('Cache-Control', 'no-store')
+  if (request.method === 'GET') return response.status(200).json({ ok: true, service: 'hospital-registration', configured: Boolean(privilegedAdmin) })
   if (request.method !== 'POST') return response.status(405).json({ error: 'Method not allowed' })
   if (!privilegedAdmin) return response.status(503).json({ error: 'Hospital registration is not configured on this deployment.' })
 
