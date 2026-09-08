@@ -57,9 +57,11 @@ function Registration() {
         ? 'Registration timed out. Check your connection and try again.'
         : normalized.includes('fetch')
           ? 'The registration service could not be reached. Please refresh the page and try again.'
-          : normalized.includes('rate limit') || normalized.includes('email send')
-            ? 'Registration does not send a confirmation email. If this email already exists, use Sign in.'
-            : message)
+          : normalized.includes('schema') || normalized.includes('supabase')
+            ? message
+            : normalized.includes('rate limit') || normalized.includes('email send')
+              ? 'Registration does not send a confirmation email. If this email already exists, use Sign in.'
+              : message)
     } finally { setLoading(false) }
   }
   return <main className="auth-shell"><form className="card" onSubmit={submit}><h1 className="brand">VITARA EMR</h1><p className="muted">Create your hospital workspace</p><ErrorMessage error={error} /><div className="form-grid">
