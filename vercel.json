@@ -1,0 +1,10 @@
+{
+  "framework": "vite",
+  "buildCommand": "pnpm build",
+  "outputDirectory": "dist",
+  "functions": { "api/register-hospital.ts": { "maxDuration": 30 } },
+  "rewrites": [
+    { "source": "/api/register-hospital", "destination": "/api/register-hospital.ts" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
+}
