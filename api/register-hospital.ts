@@ -26,7 +26,12 @@ function text(value: unknown) {
 }
 
 export default async function handler(request: VercelRequest, response: VercelResponse) {
-  response.setHeader('Cache-Control', 'no-store')
+  response.setHeader('Cache-Control', 'no-store, max-age=0')
+  response.setHeader('Access-Control-Allow-Origin', request.headers.origin || '*')
+  response.setHeader('Access-Control-Allow-Credentials', 'true')
+  response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept')
+  response.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  if (request.method === 'OPTIONS') return response.status(204).end()
   if (request.method === 'GET') return response.status(200).json({ ok: true, service: 'hospital-registration', configured: Boolean(privilegedAdmin) })
   if (request.method !== 'POST') return response.status(405).json({ error: 'Method not allowed' })
   if (!privilegedAdmin) return response.status(503).json({ error: 'Hospital registration is not configured on this deployment.' })
@@ -105,6 +110,13 @@ export default async function handler(request: VercelRequest, response: VercelRe
     if (hospitalId) await privilegedAdmin.from('hospitals').delete().eq('id', hospitalId)
     if (userId) await privilegedAdmin.auth.admin.deleteUser(userId)
     console.error('[vitara] registration failed', error)
-    return response.status(500).json({ error: 'Hospital account could not be created. Please try again.' })
+    const message = error instanceof Error ? error.message : 'Unknown registration failure'
+    const normalized = message.toLowerCase()
+    const safeMessage = normalized.includes('relation') || normalized.includes('column') || normalized.includes('schema')
+      ? 'The Supabase database schema is missing a required hospital or profile field. Apply the VITARA migration, then retry.'
+      : normalized.includes('fetch') || normalized.includes('timeout')
+        ? 'Supabase could not be reached from the registration service. Verify the production Supabase URL and service key.'
+        : 'Hospital account could not be created. Please try again.'
+    return response.status(500).json({ error: safeMessage })
   }
 }
