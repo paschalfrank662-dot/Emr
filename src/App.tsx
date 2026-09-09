@@ -50,8 +50,12 @@ function Registration() {
       if (loginError) throw new Error('Hospital was created, but automatic sign-in failed. Use the login page with the same credentials.')
       toast.success('Hospital account created and signed in')
       navigate('/dashboard')
-    } catch (cause) {
-      const message = cause instanceof Error ? cause.message : 'Unable to create hospital account.'
+      } catch (cause) {
+      const message = cause instanceof DOMException && cause.name === 'AbortError'
+        ? 'Registration timed out. Please check your connection and try again.'
+        : cause instanceof TypeError
+          ? 'The registration API could not be reached. Please open the main production URL and try again.'
+          : cause instanceof Error ? cause.message : 'Unable to create hospital account.'
       const normalized = message.toLowerCase()
       setError(normalized.includes('abort')
         ? 'Registration timed out. Check your connection and try again.'
